@@ -1,7 +1,7 @@
 package com.employee.payrole.myController;
 
 import java.util.List;
-
+import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.employee.payrole.converter.EmployeeConverter;
 import com.employee.payrole.dto.EmployeeDto;
@@ -26,10 +27,11 @@ public class MyController {
 	private EmployeeService employeeService;
 	@Autowired
 	private EmployeeConverter employeeConverter;
-	@GetMapping("/home")
+	@GetMapping("/")
 	public String home() {
 		return "Home";
 	}
+	
 	@GetMapping("/employees")
 	public List<EmployeeDto> getEmployees(){
 		List<Employee> findAll = employeeService.getEmployees();
@@ -38,8 +40,14 @@ public class MyController {
 	
 	@GetMapping("/employee/{employeeId}")
 	public EmployeeDto getEmployee(@PathVariable String employeeId){
-		Employee findOne = employeeService.getEmployee(Long.parseLong(employeeId));
-		return employeeConverter.entityTODto(findOne);
+		EmployeeDto dto =null;
+		try {
+			Employee findOne = employeeService.getEmployee(Long.parseLong(employeeId));
+			dto =  employeeConverter.entityTODto(findOne);
+		} catch (NoSuchElementException e) {
+		    System.out.println("Element Not Found");
+		}
+		return dto;
 	}
 	
 	@PostMapping("/employee")
@@ -50,7 +58,15 @@ public class MyController {
 	@PutMapping("/employee")
 	public Employee updateEmployee(@RequestBody EmployeeDto employee) {
 		Employee emp = employeeConverter.dtotoEntity(employee);
-		return this.employeeService.updateEmployee(emp);
+		Employee updateEmp = null;
+		try {
+			 updateEmp = this.employeeService.updateEmployee(emp);
+			
+		} catch(NoSuchElementException k) {
+			//throw new ResponseStatusException("No element of id:"+employee.getId()+"found");
+			//return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		return updateEmp;
 	}
 	
 	@DeleteMapping("/employee/{employeeId}")
