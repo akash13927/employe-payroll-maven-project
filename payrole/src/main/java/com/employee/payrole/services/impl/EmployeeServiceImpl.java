@@ -1,4 +1,4 @@
-package com.employee.payrole.services;
+package com.employee.payrole.services.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.employee.payrole.dao.EmployeeDao;
 import com.employee.payrole.entites.Employee;
+import com.employee.payrole.services.EmployeeService;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {

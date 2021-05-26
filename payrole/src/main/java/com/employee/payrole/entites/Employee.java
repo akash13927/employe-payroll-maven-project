@@ -2,7 +2,6 @@ package com.employee.payrole.entites;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -10,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
@@ -20,11 +19,17 @@ public class Employee {
 	private int id;
 	private String name;
 	private long salary;
+	private String empAddress;
+	
+	@OneToOne(fetch = FetchType.LAZY,cascade=CascadeType.ALL)
+	@JoinColumn(name = "ed_id")
+	private Employee_Details emp_details;
+	
 	@ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
 	@JoinTable(name="EmployeeAndEmpNo",joinColumns = {@JoinColumn(name="Emp_Id")},
 	inverseJoinColumns = {@JoinColumn(name="Emp_No_Id")})
 	private Set<Emp_Phone_No>  emp_phone_no = new HashSet<Emp_Phone_No>();
-	private String empAddress;
+	
 	public String getEmpAddress() {
 		return empAddress;
 	}
@@ -35,7 +40,16 @@ public class Employee {
 		super();
 		
 	}
-	
+	public Employee(int id, String name, long salary, String empAddress, Employee_Details emp_details,
+			Set<Emp_Phone_No> emp_phone_no) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.salary = salary;
+		this.empAddress = empAddress;
+		this.emp_details = emp_details;
+		this.emp_phone_no = emp_phone_no;
+	}
 	public Employee(int id, String name, long salary, Set<Emp_Phone_No> emp_phone_no, String empAddress) {
 		super();
 		this.id = id;
@@ -67,6 +81,12 @@ public class Employee {
 	}
 	public void setEmp_phone_no(Set<Emp_Phone_No> emp_phone_no) {
 		this.emp_phone_no = emp_phone_no;
+	}
+	public Employee_Details getEmp_details() {
+		return emp_details;
+	}
+	public void setEmp_details(Employee_Details emp_details) {
+		this.emp_details = emp_details;
 	}
 	@Override
 	public String toString() {

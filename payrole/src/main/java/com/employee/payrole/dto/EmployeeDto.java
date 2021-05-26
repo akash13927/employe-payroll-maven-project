@@ -6,6 +6,15 @@ public class EmployeeDto {
 	private long salary;
 	private long emp_phone_no;
 	private String empAddress;
+	public EmployeeDto() {}
+	public EmployeeDto(int id,String name,
+			long salary,long emp_phone_no,String empAddress) {
+		this.id = id;
+		this.name = name;
+		this.salary = salary;
+		this.emp_phone_no = emp_phone_no;
+		this.empAddress = empAddress;
+	}
 	public int getId() {
 		return id;
 	}
