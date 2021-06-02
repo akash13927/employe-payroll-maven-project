@@ -32,7 +32,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 	@Override
 	public Employee getEmployee(long employeeId) {
-		return employeeDao.getOne(employeeId);
+		return this.employeeDao.getOne(employeeId)  ;
 		//		Employee e=null;
 //		for(Employee emp:list) {  
 //			if(emp.getId() == employeeId ) {
