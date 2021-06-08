@@ -1,12 +1,12 @@
 package com.employee.payrole.myController;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import javax.ws.rs.ext.ExceptionMapper;
 
+import org.hibernate.InvalidMappingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,38 +16,31 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.BeanIds;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+
+import com.employee.payrole.converter.Emp_Phone_NoConverter;
 import com.employee.payrole.converter.EmployeeConverter;
 import com.employee.payrole.converter.util.JwtUtil;
+import com.employee.payrole.services.EmployeeService;
+import com.employee.payrole.services.Employee_Phone_No_Service;
+import com.employee.payrole.services.MyUserDetailsService;
+import com.employee.payrole.dto.Emp_Phone_NoDto;
 import com.employee.payrole.dto.EmployeeDto;
+import com.employee.payrole.entites.Emp_Phone_No;
 import com.employee.payrole.entites.Employee;
-import com.employee.payrole.filters.JwtRequestFilter;
 import com.employee.payrole.models.AuthenticationRequest;
 import com.employee.payrole.models.AuthenticationResponse;
-import com.employee.payrole.services.EmployeeService;
-import com.employee.payrole.services.MyUserDetailsService;
+
+//import com.employee.payrole.filters.JwtRequestFilter;
+//import com.employee.payrole.models.AuthenticationRequest;
+//import com.employee.payrole.models.AuthenticationResponse;
+//import com.employee.payrole.converter.util.JwtUtil;
+//import com.employee.payrole.services.MyUserDetailsService;
 
 import exception.DataNotFoundException;
 import exception.GenericExceptionMapper;
@@ -59,8 +52,13 @@ public class MyController {
 	@Autowired
 	private EmployeeConverter employeeConverter;
 	@Autowired
+	private Employee_Phone_No_Service emp_Phone_Service;
+	@Autowired
+	private Emp_Phone_NoConverter emp_Phone_No_converter;
+	
+	@Autowired
 	private AuthenticationManager authenticationManager;
-
+	
 	@Autowired
 	private JwtUtil jwtTokenUtil;
 
@@ -74,10 +72,10 @@ public class MyController {
 	@GetMapping("/employees")
 	public List<EmployeeDto> getEmployees(){
 		List<Employee> findAll = employeeService.getEmployees();
-		//return
 		List<EmployeeDto> dtoObj= employeeConverter.entityTODto(findAll);
 		return dtoObj;
 	}
+	
 	
 	@GetMapping("/employee/{employeeId}")
 	public EmployeeDto getEmployee(@PathVariable String employeeId){
@@ -94,8 +92,12 @@ public class MyController {
 	
 	@PostMapping("/employee")
 	public Employee createEmployee(@RequestBody EmployeeDto employee) {
-		Employee emp =  employeeConverter.dtotoEntity(employee);
-		return this.employeeService.createEmployee(emp);
+		try {
+			Employee emp =  employeeConverter.dtotoEntity(employee);
+			return this.employeeService.createEmployee(emp);
+		}catch(InvalidMappingException e) {
+			throw new DataNotFoundException(e.getMessage());
+		}
 	}
 	@PutMapping("/employee")
 	public Employee updateEmployee(@RequestBody EmployeeDto employee) {
@@ -112,7 +114,7 @@ public class MyController {
 		
 		return updateEmp;
 	}
-	
+
 	@DeleteMapping("/employee/{employeeId}")
 	public ExceptionMapper<Throwable> deleteEmployee(@PathVariable String employeeId) {
 		try {
@@ -123,10 +125,58 @@ public class MyController {
 			throw new DataNotFoundException("employee with id"+employeeId +"not present");
 					//ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		
-		
+				
 	}
+	@GetMapping("/employeesPhone")
+	public List<Emp_Phone_NoDto> get_All_PhoneNo(){
+		List<Emp_Phone_No> findAll = emp_Phone_Service.get_All_Employees_Phone_No();
+		List<Emp_Phone_NoDto> dtoObj= emp_Phone_No_converter.entityToDto(findAll);
+		return dtoObj;
+	}
+	@GetMapping("/employeePhone/{employeeId}")
+	public Emp_Phone_NoDto getEmployeePhoneNo(@PathVariable String employee_Phone_No_Id) {
+		Emp_Phone_NoDto dto = null;
+		Emp_Phone_No findOne = emp_Phone_Service.get_Employee_Phone_No(Integer.parseInt(employee_Phone_No_Id));
+		dto = emp_Phone_No_converter.entityToDto(findOne);
+		if(dto==null) {
+			throw new DataNotFoundException("employee phone no with id"+employee_Phone_No_Id+" is not present");
+		}
+		return dto;
+	}
+	@PostMapping("/employeePhone")
+	public Emp_Phone_No createEmployeePhoneNO(@RequestBody Emp_Phone_NoDto employeePhone) {
+		try {
+			Emp_Phone_No emp =  emp_Phone_No_converter.DtoToentity(employeePhone);
+			return this.emp_Phone_Service.add_Emp_Phone_No(emp);
+		}catch(InvalidMappingException e) {
+			throw new DataNotFoundException(e.getMessage());
+		}
+	}
+	@PutMapping("/employeePhone")
+	public Emp_Phone_No updateEmployeePhoneNo(@RequestBody Emp_Phone_NoDto empPhone)
+			{
+		Emp_Phone_No emp =emp_Phone_No_converter.DtoToentity(empPhone);
+		Emp_Phone_No updateEmp = null;
+		updateEmp = this.emp_Phone_Service.update_Emp_Phone_No(emp);
+		if(updateEmp==null) {
+			throw new DataNotFoundException("employee phone no with id "+emp.getId()+"is not present");
+		}
+		return updateEmp;
+	}
+	@DeleteMapping("/employeePhone/{employeeId}")
+	public ExceptionMapper<Throwable> deleteEmployeePhoneNo(@PathVariable String employeeId) {
+		try {
+			this.emp_Phone_Service.deleteEmployee_Phone_No(Integer.parseInt(employeeId));
+			return  null ;  
+		} catch(Exception e) {
+			throw new DataNotFoundException("employee phone no with id "+employeeId +" is not present");
+					
+		}
+				
+	}
+	
 	@RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+	@Bean(name = BeanIds.AUTHENTICATION_MANAGER)
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
 
 		try {
@@ -137,55 +187,10 @@ public class MyController {
 		catch (BadCredentialsException e) {
 			throw new Exception("Incorrect username or password", e);
 		}
-
-
 		final UserDetails userDetails = userDetailsService
 				.loadUserByUsername(authenticationRequest.getUsername());
-
 		final String jwt = jwtTokenUtil.generateToken(userDetails);
-
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
 	}
 
 }
-
-@EnableWebSecurity
-class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-	@Autowired
-	private UserDetailsService myUserDetailsService;
-	@Autowired
-	private JwtRequestFilter jwtRequestFilter;
-
-	@Autowired
-	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(myUserDetailsService);
-	}
-
-	@SuppressWarnings("deprecation")
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return NoOpPasswordEncoder.getInstance();
-	}
-
-	@Override
-	@Bean
-	public AuthenticationManager authenticationManagerBean() throws Exception {
-		return super.authenticationManagerBean();
-	}
-
-	@Override
-	protected void configure(HttpSecurity httpSecurity) throws Exception {
-		httpSecurity.csrf().disable()
-				.authorizeRequests().antMatchers("/authenticate").permitAll().
-						anyRequest().authenticated().and().
-						exceptionHandling().and().sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-		httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-
-	}
-
-}
-
-
-
-

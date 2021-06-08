@@ -3,8 +3,6 @@ package exception;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import com.employee.payrole.entites.ErrorMessage;
 

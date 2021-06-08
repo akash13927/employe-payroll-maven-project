@@ -6,9 +6,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import com.employee.payrole.dao.UserRepository;
 
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackageClasses = UserRepository.class)
+@EnableSwagger2
 public class PayroleApplication {
 
 	public static void main(String[] args) {
